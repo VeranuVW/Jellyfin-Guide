@@ -292,8 +292,9 @@
         <ul>
           <li><b>Server address</b>: the link from step <span data-num="step-address"></span></li>
           <li><b>Username</b>: the name from step <span data-num="step-user"></span></li>
-          <li><b>Password</b>: the password you use to log in to your AIOMetadata config. Signed in with OIDC? Then AIOMetadata generated a separate "client password" for you; use that one.</li>
+          <li><b>Password</b>: the password you use to log in to your AIOMetadata config. You can also log in with the <b>client password</b> shown in the Jellyfin screen of your AIOMetadata config.</li>
         </ul>
+        <figure class="shot"><img src="images/client-password.png" alt="The client password in the Jellyfin screen" onerror="this.closest('figure').remove()"><figcaption>The client password in the Jellyfin screen</figcaption></figure>
         <div class="callout warn" data-route="b">
           <strong>Behind Pangolin?</strong>
           Adding the Jellyfin server will fail as long as Pangolin blocks those requests. Add an access rule to the AIOMetadata resource that lets the Jellyfin requests through. Not sure which path is being blocked? Check <b>HTTP Requests</b> in Pangolin.
