@@ -160,7 +160,7 @@
       <li><a href="#step-aiometadata"><span data-num="step-aiometadata"></span>. Set up AIOMetadata</a></li>
       <li><a href="#step-playback"><span data-num="step-playback"></span>. Paste playback link</a></li>
       <li><a href="#step-user"><span data-num="step-user"></span>. Create a user</a></li>
-      <li><a href="#step-tracker"><span data-num="step-tracker"></span>. Watch history</a></li>
+      <li><a href="#step-tracker"><span data-num="step-tracker"></span>. Sync to other services</a></li>
       <li><a href="#step-address"><span data-num="step-address"></span>. Server address</a></li>
       <li><a href="#step-connect"><span data-num="step-connect"></span>. Connect your app</a></li>
       <li class="group">More</li>
@@ -274,13 +274,9 @@
       </div>
 
       <div class="step" id="step-tracker">
-        <div class="step-head"><span class="num"></span><h3>Choose how your watch history is tracked</h3></div>
-        <p>The watch tracker decides where your app remembers what you've watched, and what shows up under "Continue watching".</p>
-        <ul>
-          <li><b>This server only</b><span data-route="b"> (recommended when self-hosting)</span>: your watch history is stored in AIOMetadata's own database.</li>
-          <li><b>MDBList, Simkl or another service</b>: also works. Make sure that service is connected to your config and enabled in the <b>General</b> section, and turn on syncing <b>when playback starts and stops</b>.</li>
-        </ul>
-        <figure class="shot"><img src="images/watch-tracker.png" alt="Choosing a watch tracker" onerror="this.closest('figure').remove()"><figcaption>Choosing a watch tracker</figcaption></figure>
+        <div class="step-head"><span class="num"></span><h3>Sync your watch history to other services</h3><span class="only">Optional</span></div>
+        <p>Want what you watch to also show up in MDBList, Simkl or another service? Connect that service to your config and enable it in the <b>General</b> section. Then go to <b>Watch Tracking</b> and set <b>When to record</b> to <b>When playback starts and stops</b>.</p>
+        <p>Only using this server, as recommended in the previous step? Then you can skip this step.</p>
         <figure class="shot"><img src="images/tracker-playback-sync.png" alt="Watch Tracking: record when playback starts and stops" onerror="this.closest('figure').remove()"><figcaption>Watch Tracking: record when playback starts and stops</figcaption></figure>
       </div>
 
