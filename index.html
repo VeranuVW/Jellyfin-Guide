@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jellyfin Setup Guide</title>
+<meta name="description" content="Step by step: connect a Jellyfin app to AIOStreams and AIOMetadata, using hosted instances or your own server.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface-2: #f0eee9;
+    --text: #1d1c1a;
+    --muted: #6b6862;
+    --border: #e3e0d9;
+    --accent: #6b4de6;
+    --accent-soft: #ece8fd;
+    --info: #1f6feb;
+    --info-soft: #e7f0fe;
+    --warn: #b35900;
+    --warn-soft: #fdf1e3;
+    --ok: #1a7f4b;
+    --ok-soft: #e4f5ec;
+    --code-bg: #f0eee9;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141414;
+      --surface: #1d1d1d;
+      --surface-2: #262626;
+      --text: #ececea;
+      --muted: #a09d97;
+      --border: #333230;
+      --accent: #a08cff;
+      --accent-soft: #2a2546;
+      --info: #6ea8ff;
+      --info-soft: #1b2738;
+      --warn: #f0a050;
+      --warn-soft: #332515;
+      --ok: #5fd39a;
+      --ok-soft: #16301f;
+      --code-bg: #262626;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 "Inter", system-ui, sans-serif;
+  }
+  a { color: var(--accent); }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .88em; background: var(--code-bg); padding: .1em .4em; border-radius: 5px; }
+
+  /* ---------- Route filtering ---------- */
+  body.route-a [data-route="b"],
+  body.route-b [data-route="a"] { display: none !important; }
+
+  .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); max-width: 1120px; margin: 0 auto; gap: 48px; padding: 0 24px; }
+  nav.toc { position: sticky; top: 0; align-self: start; padding: 40px 0; max-height: 100vh; overflow-y: auto; }
+  nav.toc .brand { font-weight: 700; margin-bottom: 20px; display: block; color: var(--text); text-decoration: none; }
+  nav.toc ol { list-style: none; padding: 0; margin: 0; }
+  nav.toc li a { display: block; padding: 6px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: .93rem; }
+  nav.toc li a:hover { background: var(--surface-2); color: var(--text); }
+  nav.toc .group { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 10px 6px; }
+  nav.toc .route-badge { margin: 0 10px 8px; font-size: .8rem; color: var(--muted); }
+  nav.toc .route-badge b { color: var(--accent); }
+
+  main { padding: 40px 0 80px; min-width: 0; }
+  header.hero { margin-bottom: 40px; }
+  header.hero .eyebrow { color: var(--accent); font-weight: 600; font-size: .9rem; }
+  header.hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; margin: 8px 0 14px; }
+  header.hero p { color: var(--muted); font-size: 1.08rem; max-width: 640px; margin: 0; }
+
+  section { margin-bottom: 48px; scroll-margin-top: 24px; }
+  h2 { font-size: 1.45rem; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; margin: 24px 0 8px; }
+
+  .routes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .route {
+    background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+    padding: 20px; text-align: left; font: inherit; color: inherit; cursor: pointer;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+  }
+  .route:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .route:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+  .route[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .route .tag { display: inline-block; font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 99px; margin-bottom: 8px; }
+  .route.a .tag { background: var(--ok-soft); color: var(--ok); }
+  .route.b .tag { background: var(--accent-soft); color: var(--accent); }
+  .route h3 { margin: 0 0 6px; }
+  .route p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .route .pick { display: block; margin-top: 12px; font-size: .85rem; font-weight: 600; color: var(--accent); }
+  .route[aria-pressed="true"] .pick::before { content: "✓ "; }
+
+  .route-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: .95rem; color: var(--muted); }
+  .linkbtn { background: none; border: none; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+  #steps { counter-reset: step; }
+  .step { counter-increment: step; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; scroll-margin-top: 24px; }
+  .step-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .num { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .num::before { content: counter(step); }
+  .step h3 { margin: 0; }
+  .only { font-size: .75rem; font-weight: 600; padding: 2px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+  .step p:last-child, .step ul:last-child { margin-bottom: 0; }
+
+  .callout { border-radius: 10px; padding: 14px 16px; margin: 14px 0; font-size: .95rem; border-left: 4px solid; }
+  .callout.info { background: var(--info-soft); border-color: var(--info); }
+  .callout.warn { background: var(--warn-soft); border-color: var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-color: var(--ok); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  .urls { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 8px; }
+  .urls li { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: 8px; padding: 8px 8px 8px 12px; min-width: 0; }
+  .urls a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .copy { flex: none; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: .8rem; cursor: pointer; }
+  .copy:hover { border-color: var(--accent); }
+  .copy.done { color: var(--ok); border-color: var(--ok); }
+
+  .creds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+  .cred { background: var(--surface-2); border-radius: 10px; padding: 14px; }
+  .cred b { display: block; }
+  .cred span { color: var(--muted); font-size: .9rem; }
+
+  .shot { margin: 16px 0; }
+  .shot img { display: block; max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); }
+  .shot figcaption { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+
+  .own { border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; color: var(--muted); }
+
+  footer { color: var(--muted); font-size: .88rem; border-top: 1px solid var(--border); padding-top: 24px; }
+  footer ul { padding-left: 18px; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: 0; padding: 0 16px; }
+    nav.toc { position: static; max-height: none; padding: 24px 0 0; }
+    nav.toc ol { display: flex; flex-wrap: wrap; gap: 4px; }
+    nav.toc .group, nav.toc .route-badge { display: none; }
+    nav.toc li a { background: var(--surface); border: 1px solid var(--border); font-size: .85rem; }
+    .routes, .creds { grid-template-columns: 1fr; }
+    .step { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="toc" aria-label="Contents">
+    <a class="brand" href="#top">Jellyfin Setup Guide</a>
+    <ol>
+      <li class="group">Start</li>
+      <li><a href="#overview">Overview</a></li>
+      <li class="group">Steps</li>
+      <li class="route-badge" id="route-badge">Showing: <b>both routes</b></li>
+      <li><a href="#step-aiostreams"><span data-num="step-aiostreams"></span>. AIOStreams link</a></li>
+      <li data-route="b"><a href="#step-api"><span data-num="step-api"></span>. Enable media server</a></li>
+      <li><a href="#step-aiometadata"><span data-num="step-aiometadata"></span>. Set up AIOMetadata</a></li>
+      <li><a href="#step-playback"><span data-num="step-playback"></span>. Paste playback link</a></li>
+      <li><a href="#step-user"><span data-num="step-user"></span>. Create a user</a></li>
+      <li><a href="#step-tracker"><span data-num="step-tracker"></span>. Watch history</a></li>
+      <li><a href="#step-address"><span data-num="step-address"></span>. Server address</a></li>
+      <li><a href="#step-connect"><span data-num="step-connect"></span>. Connect your app</a></li>
+      <li class="group">More</li>
+      <li><a href="#extra">Extra info</a></li>
+      <li><a href="#help">Help &amp; sources</a></li>
+    </ol>
+  </nav>
+
+  <main id="top">
+    <header class="hero">
+      <div class="eyebrow">Guide</div>
+      <h1>Connect your Jellyfin app to AIOStreams and AIOMetadata</h1>
+      <p>This guide turns your catalogs and streams into a "Jellyfin server" you can add to any Jellyfin-compatible app, complete with artwork and watch history.</p>
+    </header>
+
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Your app normally talks to a Jellyfin media server. AIOMetadata can act as one: it provides the catalogs and details (titles, posters, descriptions), and when you press play it asks AIOStreams for the streams. By the end you'll have three things:</p>
+      <div class="creds">
+        <div class="cred"><b>Server address</b><span>The link to your Jellyfin server</span></div>
+        <div class="cred"><b>Username</b><span>One you create in step <span data-num="step-user"></span></span></div>
+        <div class="cred"><b>Password</b><span>The password of your AIOMetadata config</span></div>
+      </div>
+
+      <h3>Choose your route</h3>
+      <p style="margin:0;color:var(--muted)">Click a route and the guide will only show the steps you need.</p>
+      <div class="routes">
+        <button type="button" class="route a" data-pick="a" aria-pressed="false">
+          <span class="tag">Route A</span>
+          <h3>Public Instances</h3>
+          <p>You use a public instance of AIOStreams and AIOMetadata. No server, no commands, no domain needed.</p>
+          <span class="pick">Show route A</span>
+        </button>
+        <button type="button" class="route b" data-pick="b" aria-pressed="false">
+          <span class="tag">Route B</span>
+          <h3>Your own server</h3>
+          <p>You run AIOStreams and AIOMetadata yourself (for example on a VPS behind Pangolin). There are a few extra steps.</p>
+          <span class="pick">Show route B</span>
+        </button>
+      </div>
+      <div class="route-status">
+        <span id="route-status-text">No route chosen yet, so both are shown.</span>
+        <button type="button" class="linkbtn" id="show-all" hidden>Show both routes</button>
+      </div>
+    </section>
+
+    <section id="steps">
+      <h2>Steps</h2>
+
+      <div class="step" id="step-aiostreams">
+        <div class="step-head"><span class="num"></span><h3>Create your AIOStreams config and copy the link</h3></div>
+        <p>AIOStreams decides where your streams come from.</p>
+        <div data-route="a">
+          <p><b>Public instance:</b> open one of these public instances:</p>
+          <ul class="urls">
+            <li><a href="https://aiostreams.viren070.me/" target="_blank" rel="noopener">aiostreams.viren070.me</a><button class="copy" data-url="https://aiostreams.viren070.me/">Copy</button></li>
+            <li><a href="https://aiostreams.fortheweak.cloud/" target="_blank" rel="noopener">aiostreams.fortheweak.cloud</a><button class="copy" data-url="https://aiostreams.fortheweak.cloud/">Copy</button></li>
+            <li><a href="https://aiostreamsfortheweebsstable.midnightignite.me/" target="_blank" rel="noopener">aiostreamsfortheweebsstable.midnightignite.me</a><button class="copy" data-url="https://aiostreamsfortheweebsstable.midnightignite.me/">Copy</button></li>
+            <li><a href="https://aio.atbphosting.com" target="_blank" rel="noopener">aio.atbphosting.com</a><button class="copy" data-url="https://aio.atbphosting.com">Copy</button></li>
+          </ul>
+        </div>
+        <p data-route="b"><b>Selfhosted:</b> open your own instance, for example <code>aiostreams.yourdomain.xyz</code>.</p>
+        <p>Set everything up the way you like. Then go to <b>Save &amp; Install</b> and copy the <b>manifest URL</b> (your configuration link). Keep it handy; you'll need it in step <span data-num="step-playback"></span>.</p>
+        <div class="callout info"><strong>First time using AIOStreams?</strong>Use the <b>Tamtaro Complete SEL Setup</b> preset on the start screen and follow its instructions.</div>
+        <figure class="shot"><img src="images/aiostreams-preset.png" alt="The Tamtaro Complete SEL Setup preset on the AIOStreams start screen" onerror="this.closest('figure').remove()"><figcaption>The Tamtaro Complete SEL Setup preset on the AIOStreams start screen</figcaption></figure>
+      </div>
+
+      <div class="step" id="step-api" data-route="b">
+        <div class="step-head"><span class="num"></span><h3>Enable the media server</h3><span class="only">Selfhosted only</span></div>
+        <p>On a self-hosted AIOMetadata the Jellyfin feature is off by default. Go to <code>aiometadata.yourdomain.xyz/dashboard</code>, open <b>Settings</b>, search for "media server" and turn on <b>Enable media server</b>.</p>
+        <figure class="shot"><img src="images/jellyfin-api-setting.png" alt="The Enable media server option in the AIOMetadata dashboard settings" onerror="this.closest('figure').remove()"><figcaption>The Enable media server option in the AIOMetadata dashboard settings</figcaption></figure>
+        <p class="only-both" style="color:var(--muted);font-size:.92rem">Using a public instance? Those already have this enabled, so skip this step.</p>
+      </div>
+
+      <div class="step" id="step-aiometadata">
+        <div class="step-head"><span class="num"></span><h3>Set up AIOMetadata and open the Jellyfin option</h3></div>
+        <p>AIOMetadata provides the catalogs and all the info you see in the app.</p>
+        <div data-route="a">
+          <p><b>Public instance:</b> open one of these public instances (each works as a fully enabled Jellyfin server):</p>
+          <ul class="urls">
+            <li><a href="https://aiometadata.viren070.me/" target="_blank" rel="noopener">aiometadata.viren070.me</a><button class="copy" data-url="https://aiometadata.viren070.me/">Copy</button></li>
+            <li><a href="https://aiometadata.fortheweak.cloud/" target="_blank" rel="noopener">aiometadata.fortheweak.cloud</a><button class="copy" data-url="https://aiometadata.fortheweak.cloud/">Copy</button></li>
+            <li><a href="https://aiometadatafortheweebs.midnightignite.me" target="_blank" rel="noopener">aiometadatafortheweebs.midnightignite.me</a><button class="copy" data-url="https://aiometadatafortheweebs.midnightignite.me">Copy</button></li>
+            <li><a href="https://aiomd.atbphosting.com/" target="_blank" rel="noopener">aiomd.atbphosting.com</a><button class="copy" data-url="https://aiomd.atbphosting.com/">Copy</button></li>
+          </ul>
+        </div>
+        <p data-route="b"><b>Selfhosted:</b> open your own instance, for example <code>aiometadata.yourdomain.xyz</code>.</p>
+        <p>Choose your metadata and catalogs (one of the default presets is a fine starting point). Then go to the configuration section and click the <b>Jellyfin</b> option.</p>
+        <figure class="shot"><img src="images/aiometadata-jellyfin-option.png" alt="The Jellyfin option in the configuration section" onerror="this.closest('figure').remove()"><figcaption>The Jellyfin option in the configuration section</figcaption></figure>
+        <div class="callout info"><strong>Don't see the Jellyfin option?</strong>If this is your first time configuring, you might have to save the config first before the Jellyfin icon appears.</div>
+      </div>
+
+      <div class="step" id="step-playback">
+        <div class="step-head"><span class="num"></span><h3>Paste your AIOStreams link under playback</h3></div>
+        <p>The Jellyfin screen has a <b>Playback</b> section. Paste the manifest URL from step <span data-num="step-aiostreams"></span> there. This tells AIOMetadata where to fetch streams when you hit play.</p>
+        <figure class="shot"><img src="images/playback-url.png" alt="The Playback section on the Jellyfin screen" onerror="this.closest('figure').remove()"><figcaption>The Playback section on the Jellyfin screen</figcaption></figure>
+      </div>
+
+      <div class="step" id="step-user">
+        <div class="step-head"><span class="num"></span><h3>Create a user</h3></div>
+        <p>Pick a username; this is what you'll log in with in the app. You can create several users here, but they're meant as <b>profiles for the same person</b>, for example one for movies and shows and a separate one for anime.</p>
+        <figure class="shot"><img src="images/create-user.png" alt="Creating a user (you can pick your tracker here too)" onerror="this.closest('figure').remove()"><figcaption>Creating a user (you can pick your tracker here too)</figcaption></figure>
+      </div>
+
+      <div class="step" id="step-tracker">
+        <div class="step-head"><span class="num"></span><h3>Choose how your watch history is tracked</h3></div>
+        <p>The watch tracker decides where your app remembers what you've watched, and what shows up under "Continue watching".</p>
+        <ul>
+          <li><b>This server only</b><span data-route="b"> (recommended when self-hosting)</span>: your watch history is stored in AIOMetadata's own database.</li>
+          <li><b>MDBList, Simkl or another service</b>: also works. Make sure that service is connected to your config and enabled in the <b>General</b> section, and turn on syncing <b>when playback starts and stops</b>.</li>
+        </ul>
+        <figure class="shot"><img src="images/watch-tracker.png" alt="Choosing a watch tracker" onerror="this.closest('figure').remove()"><figcaption>Choosing a watch tracker</figcaption></figure>
+        <figure class="shot"><img src="images/tracker-playback-sync.png" alt="Watch Tracking: record when playback starts and stops" onerror="this.closest('figure').remove()"><figcaption>Watch Tracking: record when playback starts and stops</figcaption></figure>
+      </div>
+
+      <div class="step" id="step-address">
+        <div class="step-head"><span class="num"></span><h3>Copy your server address</h3></div>
+        <p>In the <b>Server address</b> section you'll find the link to your personal Jellyfin server. Copy it. You now have all three details.</p>
+        <figure class="shot"><img src="images/server-address.png" alt="The server address at the top of the Jellyfin screen" onerror="this.closest('figure').remove()"><figcaption>The server address at the top of the Jellyfin screen</figcaption></figure>
+      </div>
+
+      <div class="step" id="step-connect">
+        <div class="step-head"><span class="num"></span><h3>Connect the server in your app</h3></div>
+        <p>Open your Jellyfin-compatible app. It's often under <b>Library → Add a Server</b>; choose <b>Jellyfin</b> as the type. Fill in:</p>
+        <ul>
+          <li><b>Server address</b>: the link from step <span data-num="step-address"></span></li>
+          <li><b>Username</b>: the name from step <span data-num="step-user"></span></li>
+          <li><b>Password</b>: the password you use to log in to your AIOMetadata config. Signed in with OIDC? Then AIOMetadata generated a separate "client password" for you; use that one.</li>
+        </ul>
+        <div class="callout warn" data-route="b">
+          <strong>Behind Pangolin?</strong>
+          Adding the Jellyfin server will fail as long as Pangolin blocks those requests. Add an access rule to the AIOMetadata resource that lets the Jellyfin requests through. Not sure which path is being blocked? Check <b>HTTP Requests</b> in Pangolin.
+          <figure class="shot"><img src="images/pangolin-access-rule.png" alt="The Pangolin access rule for AIOMetadata" onerror="this.closest('figure').remove()"><figcaption>The Pangolin access rule for AIOMetadata</figcaption></figure>
+        </div>
+        <p>Save the connection. The app will fetch your catalogs, artwork and watch history. Once the first scan finishes, you're ready to watch.</p>
+      </div>
+    </section>
+
+    <section id="extra">
+      <h2>Extra information</h2>
+      <!--
+        YOUR OWN INFO: add your extra content below.
+        Copy a <div class="step">…</div> or <div class="callout info">…</div> block to get the same styling.
+        Add data-route="a" to show something only for route A, or data-route="b" for route B only.
+        Leave it out to show it for both.
+      -->
+      <div class="own">
+        Space for your own additions: tips, recommended apps, your own server addresses or FAQs.
+      </div>
+    </section>
+
+    <footer id="help">
+      <h2 style="color:var(--text)">Help &amp; sources</h2>
+      <p>This guide combines and rewrites the sources below. All credit goes to their authors and the developers:</p>
+      <ul>
+        <li><a href="https://redhair.gitbook.io/redhair-guides#id-10-installing-to-a-jellyfin-client" target="_blank" rel="noopener">Redhair Guides: Installing to a Jellyfin client</a> (with screenshots of every step)</li>
+        <li><a href="https://rentry.co/community-jf-guide" target="_blank" rel="noopener">Community Jellyfin Guide</a></li>
+        <li><a href="https://github.com/cedya77/aiometadata/blob/feat/jellyfin-server/docs/jellyfin.md" target="_blank" rel="noopener">Official AIOMetadata Jellyfin documentation</a></li>
+        <li><a href="https://jeor.github.io/aiom/" target="_blank" rel="noopener">AIOMetadata Community Guide</a> (collections and optimization)</li>
+        <li><a href="https://discord.com/invite/aiostreams" target="_blank" rel="noopener">AIOStreams Discord</a> (troubleshooting help)</li>
+      </ul>
+      <p>The hosted instances are independent third-party projects.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var body = document.body;
+    var buttons = document.querySelectorAll('.route[data-pick]');
+    var statusText = document.getElementById('route-status-text');
+    var showAll = document.getElementById('show-all');
+    var badge = document.getElementById('route-badge');
+    var labels = { a: 'Route A (public instances)', b: 'Route B (your own server)' };
+
+    // Number the visible steps and update every "step X" reference
+    function renumber() {
+      var n = 0;
+      document.querySelectorAll('#steps .step').forEach(function (step) {
+        var visible = step.offsetParent !== null || getComputedStyle(step).display !== 'none';
+        if (getComputedStyle(step).display === 'none') visible = false;
+        if (visible) n++;
+        step.dataset.n = visible ? n : '';
+      });
+      document.querySelectorAll('[data-num]').forEach(function (el) {
+        var target = document.getElementById(el.getAttribute('data-num'));
+        el.textContent = target ? target.dataset.n : '';
+      });
+    }
+
+    function setRoute(route, scroll) {
+      body.classList.remove('route-a', 'route-b');
+      if (route) body.classList.add('route-' + route);
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', b.dataset.pick === route ? 'true' : 'false');
+      });
+      statusText.textContent = route
+        ? 'Showing only the steps for ' + labels[route] + '.'
+        : 'No route chosen yet, so both are shown.';
+      showAll.hidden = !route;
+      badge.innerHTML = 'Showing: <b>' + (route ? 'Route ' + route.toUpperCase() : 'both routes') + '</b>';
+      // The "skip this step" hint only matters when both routes are visible
+      document.querySelectorAll('.only-both').forEach(function (el) { el.style.display = route ? 'none' : ''; });
+      renumber();
+      try {
+        if (route) localStorage.setItem('jf-guide-route', route);
+        else localStorage.removeItem('jf-guide-route');
+      } catch (e) {}
+      if (scroll) document.getElementById('steps').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var already = b.getAttribute('aria-pressed') === 'true';
+        setRoute(already ? null : b.dataset.pick, !already);
+      });
+    });
+    showAll.addEventListener('click', function () { setRoute(null, false); });
+
+    // Allow links like index.html#route-a or #route-b
+    var fromHash = (location.hash.match(/^#route-([ab])$/) || [])[1];
+    var saved = null;
+    try { saved = localStorage.getItem('jf-guide-route'); } catch (e) {}
+    setRoute(fromHash || (saved === 'a' || saved === 'b' ? saved : null), false);
+
+    // Copy buttons
+    document.querySelectorAll('.copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var url = btn.getAttribute('data-url');
+        var done = function () {
+          btn.textContent = 'Copied';
+          btn.classList.add('done');
+          setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done, function () { prompt('Copy this link:', url); });
+        } else {
+          prompt('Copy this link:', url);
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>
