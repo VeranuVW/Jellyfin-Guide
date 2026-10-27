@@ -122,11 +122,6 @@
   .copy:hover { border-color: var(--accent); }
   .copy.done { color: var(--ok); border-color: var(--ok); }
 
-  .creds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
-  .cred { background: var(--surface-2); border-radius: 10px; padding: 14px; }
-  .cred b { display: block; }
-  .cred span { color: var(--muted); font-size: .9rem; }
-
   .shot { margin: 16px 0; }
   .shot img { display: block; max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); }
   .shot figcaption { font-size: .85rem; color: var(--muted); margin-top: 6px; }
@@ -140,7 +135,7 @@
     nav.toc ol { display: flex; flex-wrap: wrap; gap: 4px; }
     nav.toc .group, nav.toc .route-badge { display: none; }
     nav.toc li a { background: var(--surface); border: 1px solid var(--border); font-size: .85rem; }
-    .routes, .creds { grid-template-columns: 1fr; }
+    .routes { grid-template-columns: 1fr; }
     .step { padding: 18px; }
   }
 </style>
@@ -178,12 +173,7 @@
 
     <section id="overview">
       <h2>Overview</h2>
-      <p>Your app normally talks to a Jellyfin media server. AIOMetadata can act as one: it provides the catalogs and details (titles, posters, descriptions), and when you press play it asks AIOStreams for the streams. By the end you'll have three things:</p>
-      <div class="creds">
-        <div class="cred"><b>Server address</b><span>The link to your Jellyfin server</span></div>
-        <div class="cred"><b>Username</b><span>One you create in step <span data-num="step-user"></span></span></div>
-        <div class="cred"><b>Password</b><span>The password of your AIOMetadata config</span></div>
-      </div>
+      <p>Your app normally talks to a Jellyfin media server. AIOMetadata can act as one: it provides the catalogs and details (titles, posters, descriptions), and when you press play it asks AIOStreams for the streams.</p>
 
       <h3>Choose your route</h3>
       <p style="margin:0;color:var(--muted)">Click a route and the guide will only show the steps you need.</p>
