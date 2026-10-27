@@ -374,7 +374,7 @@
     var fromHash = (location.hash.match(/^#route-([ab])$/) || [])[1];
     var saved = null;
     try { saved = localStorage.getItem('jf-guide-route'); } catch (e) {}
-    setRoute(fromHash || (saved === 'a' || saved === 'b' ? saved : null), false);
+    setRoute(fromHash || (saved === 'a' || saved === 'b' ? saved : 'a'), false);
 
     // Copy buttons
     document.querySelectorAll('.copy').forEach(function (btn) {
